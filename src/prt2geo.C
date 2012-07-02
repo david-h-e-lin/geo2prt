@@ -68,9 +68,9 @@ loadPRT(GU_Detail *gdp)
 
 	
 	
-	GEO_AttributeHandle		name_gah;
+    GEO_AttributeHandle		name_gah;
 
-    GU_PrimParticle *PRT
+    GU_PrimParticle *PRT;
 
     if (PRT = GU_PrimParticle::build(gdp, 4))
     {
