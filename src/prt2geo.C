@@ -56,7 +56,7 @@ usage(const char *program)
 
 
 bool
-loadPRT(GU_Detail *gdp)
+loadPRT(const std::string& prtFile, GU_Detail *gdp)
 {
     struct{
 		float pos[3];
@@ -66,23 +66,29 @@ loadPRT(GU_Detail *gdp)
 		INT64 id;
 	} theParticle = { {0,0,0}, {0,0,0}, {1.f,1.f,1.f}, 0.f, -1 };
 
-	
-	
-    GEO_AttributeHandle		name_gah;
+    prtio::prt_ifstream stream( prtFile );
+    
+    //We demand a "Position" channel exist, otherwise it throws an exception.
+    stream.bind( "Position", theParticle.pos, 3 );
+
+    //GEO_AttributeHandle		name_gah;
 
     GU_PrimParticle *PRT;
-
-    if (PRT = GU_PrimParticle::build(gdp, 4))
+    
+    bool prtEnd = 0;
+    if (PRT = GU_PrimParticle::build(gdp, 200))
     {
-        GA_Primitive::const_iterator it;
-        PRT->beginVertex(it);
-        do
-        {
-            gdp->setPos3(it.getPointOffset(), 3, 1,0.5);
-            it.advance();
-        }
-        while (!it.atEnd());
+      GA_Primitive::const_iterator it;
+      PRT->beginVertex(it);
+      do
+      {
+	prtEnd = stream.read_next_particle(); //read a particle
+	gdp->setPos3(it.getPointOffset(), theParticle.pos[0], theParticle.pos[1], theParticle.pos[2]); // feed position
+        it.advance();
+      }
+      while (!it.atEnd() || !prtEnd);
     }
+    stream.close();
 
     // All done successfully
     return true;
@@ -100,7 +106,7 @@ main(int argc, char *argv[])
 
     args.initialize(argc, argv);
 
-    if (args.argc() != 2)
+    if (args.argc() != 3)
     {
 		usage(argv[0]);
 		return 1;
@@ -108,16 +114,17 @@ main(int argc, char *argv[])
 
     UT_String		inputname, outputname;
 
-    outputname.harden(argv[1]);
+    inputname.harden(argv[1]);
+    outputname.harden(argv[2]);
 
-	// Get data into gdp
-	loadPRT(&gdp);
+    // Get data into gdp
+    loadPRT((const char *) inputname, &gdp);
 
-	// Save our result.
+    // Save our result.
 #if defined(HOUDINI_11)
-	gdp.save((const char *) outputname, 0, 0);
+    gdp.save((const char *) outputname, 0, 0);
 #else
-	gdp.save(outputname, NULL);
+    gdp.save(outputname, NULL);
 #endif
     
     return 0;
