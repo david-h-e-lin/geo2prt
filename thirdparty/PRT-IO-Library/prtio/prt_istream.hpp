@@ -138,6 +138,19 @@ public:
 
 		return result;
 	}
+	
+	/**
+	 * This returns an std::vector array of strings containing all the channels' names.
+	 * @return list of channel names
+	 */
+	const std::vector<std::string> get_channels_list(){
+		std::vector<std::string> channels_list;
+		std::size_t numchan = m_layout.num_channels();
+		for (int i = 0; i < numchan; i++) {
+		  channels_list.push_back(m_layout.get_channel_name(i));
+		}
+		return channels_list;
+	}
 };
 
 }//namespace prtio
